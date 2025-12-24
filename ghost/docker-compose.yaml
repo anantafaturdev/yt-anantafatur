@@ -1,0 +1,34 @@
+services:
+
+  ghost:
+    image: ghost:6.10.3-alpine3.23
+    restart: always
+    ports:
+      - 8087:2368
+    environment:
+      database__client: mysql
+      database__connection__host: db
+      database__connection__user: root
+      database__connection__password: 96WlUp5b/p2VbBx9
+      database__connection__database: ghost
+      url: https://docs.anantafatur.dev
+      mail__transport: SMTP
+      mail__options__host: mail.smtp2go.com
+      mail__options__port: 587
+      mail__options__auth__user: XXXXXXXXXXXX
+      mail__options__auth__pass:XXXXXXXXXXXX
+      mail__from: XXXXXXXXXXXX <XXXXXX@XXXXXXXXXXXX.XXX>
+    volumes:
+      - ghost:/var/lib/ghost/content
+
+  db:
+    image: mysql:8.0-bookworm
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 96WlUp5b/p2VbBx9
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  ghost:
+  db:

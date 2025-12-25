@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: ["server", "--console-address", ":9001", "/data"]
+    volumes:
+      - data-minio:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "${MINIO_ENDPOINT}/minio/health/live"]
+      interval: 5s
+      retries: 5
+      timeout: 2s
+
+  minio-buckets:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: minio-buckets
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "on-failure"
+    entrypoint: >
+      /bin/sh -c "
+      set -e;
+
+      echo '>> Setting MinIO alias';
+      mc alias set localminio ${MINIO_ENDPOINT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+
+      echo '>> Creating bucket';
+      mc mb localminio/${MINIO_BUCKET_NAME} || true;
+
+      echo '>> Creating app access key';
+      mc admin accesskey create localminio/ --access-key ${MINIO_ACCESS_KEY} --secret-key ${MINIO_SECRET_KEY} || true;
+
+      echo '>> Done';
+      "
+
+volumes:
+  data-minio:
+  
